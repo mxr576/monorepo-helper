@@ -1,0 +1,36 @@
+# Monorepo Helper Composer plugin
+
+This Composer plugin finds all packages in a GIT monorepo and ensures every time when Composer installs _the latest
+version of a package_ and the package is available inside the monorepo then the monorepo version
+of the package gets installed (symlinked from the monorepo) instead other available versions.
+
+## Installation
+
+```sh
+$ composer global require pronovix/monorepo-helper
+```
+
+## How it works
+
+The plugin tries to find the latest, valid, semantic versioning GIT tag in monorepo's remote origin. If it does not
+find a valid semantic versioning tag it falls back to the latest dev version.
+
+The identified version from GIT should be always the same as latest version available version on Packagist or in any
+other Composer repository from a library stored in the monorepo.
+
+The plugin can only fetch the latest tags from the remote origin if the runtime environment has access to the origin
+repository (via API keys, SSH keys, etc.) If it does not have access to remote origin it is recommended to enable the
+plugin's offline mode and before every `composer` command make sure that the latest tags from the remote origin get
+fetched with `git fetch origin` manually or automatically.
+
+## Configuration options
+
+You can configure this plugin by setting the following configuration options in the root package's composer.json in
+the [extra](https://getcomposer.org/doc/04-schema.md#extra) section under the `monorepo-helper` key or with the related
+environment variables. The configuration in the root package's composer.json has the highest priority when the plugin's
+configuration gets resolved.
+
+|  `{{"extra": {"monorepo-helper": { "key": "value"}}}}` | Environment variable  | Type  | Default value | Description |
+|---------------------------------------|-----------------------|-------|------------------|-------------|
+| offline-mode  | PRONOVIX_MONOOREPO_HELPER_OFFLINE_MODE  | bool  | FALSE  | If it is set to TRUE then the plugin does not try to fetch the latest tags from remote origin. You should ensures that latest tags are being fetched before the plugin actives.
+|  max-discover-depth |  PRONOVIX_MONOREPO_HELPER_MAX_DISCOVERY_DEPTH |  int | 5 | The maximum package discovery depth from the monorepo's root.   |
