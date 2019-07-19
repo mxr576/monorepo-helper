@@ -140,7 +140,7 @@ final class MonorepoRepository extends ArrayRepository
                 } catch (\Exception $e) {
                     // \Composer\Package\Loader\ArrayLoader::load() can thrown an exception even if it is not defined
                     // in the interface.
-                    $this->logger->error('Unable to load package data from {file} file. Skipping.', ['file' => $composerFilePath]);
+                    $this->logger->error('Unable to load package data from {file} file. Error: {error}.', ['file' => $composerFilePath, 'error' => $e->getMessage()]);
                     continue;
                 }
                 $this->addPackage($package);
