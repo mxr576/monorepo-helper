@@ -145,7 +145,6 @@ final class MonorepoVersionGuesser
      */
     private function getNextSemanticVersion()
     {
-        $next_version = false;
         if (null === $this->_nextVersion) {
             $latest_semver_tag = $this->getLatestSemanticVersionGitTag();
             if (null !== $latest_semver_tag) {
@@ -160,15 +159,15 @@ final class MonorepoVersionGuesser
 
                         return implode('', $matches);
                     }, $prerelease[0]);
-                    $next_version = "{$version->getMajor()}.{$version->getMinor()}.{$version->getPatch()}-{$next_pre_release}";
+                    $this->_nextVersion = "{$version->getMajor()}.{$version->getMinor()}.{$version->getPatch()}-{$next_pre_release}";
                 } else {
-                    $next_version = $version->inc('patch')->getVersion();
+                    $this->_nextVersion = $version->inc('patch')->getVersion();
                 }
-                $this->logger->info("'{version}' is the next semantic version for all packages inside the monorepo.", ['version' => $next_version]);
+                $this->logger->info("'{version}' is the next semantic version for all packages inside the monorepo.", ['version' => $this->_nextVersion]);
+            } else {
+                $this->_nextVersion = false;
             }
         }
-
-        $this->_nextVersion = $next_version;
 
         return $this->_nextVersion;
     }

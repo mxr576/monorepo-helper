@@ -39,21 +39,46 @@ final class PluginConfiguration
     /** @var int */
     private $maxDiscoveryDepth;
 
+    /** @var string[] */
+    private $excludedDirectories = [];
+
+    /**
+     * @var bool
+     */
+    private $enabled;
+
     /**
      * PluginConfiguration constructor.
      *
      * @param \Composer\Composer $composer
+     *
+     * @psalm-suppress PossiblyFalseArgument
      */
     public function __construct(Composer $composer)
     {
         $extra = $composer->getPackage()->getExtra();
         $monorepo_helper = $extra['monorepo-helper'] ?? [];
-        $this->offlineMode = (bool) ($monorepo_helper['offline-mode'] ?? getenv('PRONOVIX_MONOOREPO_HELPER_OFFLINE_MODE') ?? false);
+        $this->enabled = (bool) ($monorepo_helper['enabled'] ?? false === getenv('PRONOVIX_MONOOREPO_HELPER_ENABLED') ? true : (bool) getenv('PRONOVIX_MONOOREPO_HELPER_ENABLED'));
+        $this->offlineMode = (bool) ($monorepo_helper['offline-mode'] ?? false === getenv('PRONOVIX_MONOOREPO_HELPER_OFFLINE_MODE') ? false : (bool) getenv('PRONOVIX_MONOOREPO_HELPER_OFFLINE_MODE'));
         // 0 as max discovery depth is not valid.
         $this->maxDiscoveryDepth = (int) ($monorepo_helper['max-discover-depth'] ?? getenv('PRONOVIX_MONOREPO_HELPER_MAX_DISCOVERY_DEPTH')) ?: self::DEFAULT_PACKAGE_DISCOVERY_DEPTH;
+        $this->excludedDirectories = is_array($monorepo_helper['excluded-directories'] ?? null) ? $monorepo_helper['excluded-directories'] : false === getenv('PRONOVIX_MONOREPO_HELPER_EXCLUDED_DIRECTORIES') ? [] : explode(',', getenv('PRONOVIX_MONOREPO_HELPER_EXCLUDED_DIRECTORIES'));
     }
 
     /**
+     * Set of directories where the monorepo helper should not try to find packages.
+     *
+     * @return string[]
+     *   Array of directory names.
+     */
+    public function getExcludedDirectories(): array
+    {
+        return $this->excludedDirectories;
+    }
+
+    /**
+     * The maximum lookup depth from the monorepo's root for package discovery.
+     *
      * @return int
      */
     public function getMaxDiscoveryDepth(): int
@@ -62,10 +87,24 @@ final class PluginConfiguration
     }
 
     /**
+     * Enables/disables fetching changes from remote origin.
+     *
      * @return bool
      */
     public function isOfflineMode(): bool
     {
         return $this->offlineMode;
+    }
+
+    /**
+     * Enables/disables the plugin.
+     *
+     * It allows to disable the plugin in case of an error.
+     *
+     * @return bool
+     */
+    public function isEnabled(): bool
+    {
+        return $this->enabled;
     }
 }

@@ -134,8 +134,15 @@ final class MonorepoRepository extends ArrayRepository
                 if (is_dir($this->monorepoRoot . DIRECTORY_SEPARATOR . '.git') && 0 === $this->process->execute('git log -n1 --pretty=%H', $output, $packageRoot)) {
                     $package_data['dist']['reference'] = trim($output);
                 }
-                /** @var \Composer\Package\Package $package */
-                $package = $this->loader->load($package_data);
+                /* @var \Composer\Package\Package $package */
+                try {
+                    $package = $this->loader->load($package_data);
+                } catch (\Exception $e) {
+                    // \Composer\Package\Loader\ArrayLoader::load() can thrown an exception even if it is not defined
+                    // in the interface.
+                    $this->logger->error('Unable to load package data from {file} file. Skipping.', ['file' => $composerFilePath]);
+                    continue;
+                }
                 $this->addPackage($package);
                 $this->logger->info('Added {package} {type} as {version} version from the monorepo.', ['package' => $package->getPrettyName(), 'type' => $package->getType(), 'version' => $package->getPrettyVersion()]);
             }
@@ -156,6 +163,11 @@ final class MonorepoRepository extends ArrayRepository
             ->depth("<= {$this->configuration->getMaxDiscoveryDepth()}")
             ->notPath('vendor')
             ->files()->name('composer.json');
+
+        // BC compatibility with symfony/finder 3.4 where noPath() only accepted a string.
+        foreach ($this->configuration->getExcludedDirectories() as $excludedDirectory) {
+            $projects->notPath($excludedDirectory);
+        }
 
         foreach ($projects as $project) {
             /* @var $project \SplFileInfo */

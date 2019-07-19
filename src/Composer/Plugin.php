@@ -53,11 +53,20 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
     public function activate(Composer $composer, IOInterface $io): void
     {
         $this->logger = new Logger($io);
+        $configuration = new PluginConfiguration($composer);
+
+        if (!$configuration->isEnabled()) {
+            $this->logger->info('Plugin is configured to be disabled.');
+
+            return;
+        }
+
         $process = new ProcessExecutor($io);
         $monorepoRoot = null;
         $output = '';
         if (0 === $process->execute('git rev-parse --absolute-git-dir', $output)) {
             $monorepoRoot = dirname(trim($output));
+            $this->logger->info('Detected monorepo root: {dir}', ['dir' => $monorepoRoot]);
         }
 
         if (null === $monorepoRoot) {
@@ -66,7 +75,6 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
             return;
         }
 
-        $configuration = new PluginConfiguration($composer);
         $versionParser = new VersionParser();
         $monorepoVersionGuesser = new MonorepoVersionGuesser($monorepoRoot, new VersionGuesser($composer->getConfig(), $process, $versionParser), $process, $configuration, $this->logger);
         $this->repository = new MonorepoRepository($monorepoRoot, $configuration, new ArrayLoader($versionParser, true), $process, $monorepoVersionGuesser, $this->logger);
