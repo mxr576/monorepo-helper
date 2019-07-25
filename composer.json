@@ -1,33 +1,35 @@
 {
     "name": "pronovix/monorepo-helper",
-    "description": "Monorepo helper Composer plugin.",
     "type": "composer-plugin",
+    "description": "Monorepo helper Composer plugin.",
     "license": "GPL-2.0-or-later",
     "require": {
         "composer-plugin-api": "^1.1",
+        "pronovix/composer-logger": "*",
         "symfony/finder": "^3.4 || ^4.0",
-        "vierbergenlars/php-semver": "^3.0.2",
-        "psr/log": "^1.1"
+        "vierbergenlars/php-semver": "^3.0.2"
     },
     "require-dev": {
         "composer/composer": "^1.7.3",
         "friendsofphp/php-cs-fixer": "^2.15",
-        "vimeo/psalm": "^3.4"
+        "vimeo/psalm": "^3.2"
     },
     "extra": {
-        "class": "Pronovix\\MonorepoHelper\\Composer\\Plugin",
         "branch-alias": {
             "2.x": "2.x-dev"
-        }
+        },
+        "class": "Pronovix\\MonorepoHelper\\Composer\\Plugin"
     },
     "autoload": {
         "psr-4": {
             "Pronovix\\MonorepoHelper\\": "src/"
         }
     },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
     "scripts": {
         "analyze": "psalm --config=psalm.xml.dist --show-info=false --stats",
-        "check-style": "php-cs-fixer fix --config=./.php_cs.dist --dry-run",
-        "fix-style": "php-cs-fixer fix --config=./.php_cs.dist"
+        "check-style": "php-cs-fixer fix --dry-run",
+        "fix-style": "php-cs-fixer fix"
     }
 }
