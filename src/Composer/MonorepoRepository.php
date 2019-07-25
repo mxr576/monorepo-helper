@@ -115,6 +115,12 @@ final class MonorepoRepository extends ArrayRepository
         parent::initialize();
 
         if ($this->enabled) {
+            $output = '';
+            $packageDistReference = null;
+            if (0 === $this->process->execute('git log -n1 --pretty=%H', $output, $this->monorepoRoot)) {
+                $packageDistReference = trim($output);
+            }
+
             foreach ($this->getPackageRoots() as $packageRoot) {
                 $composerFilePath = $packageRoot . DIRECTORY_SEPARATOR . 'composer.json';
 
@@ -130,11 +136,10 @@ final class MonorepoRepository extends ArrayRepository
                 $package_data['transport-options'] = ['symlink' => true];
                 $package_data['version'] = $this->monorepoVersionGuesser->getPackageVersion($package_data, $packageRoot);
 
-                $output = '';
-                // TODO Calculate this only once.
-                if (is_dir($this->monorepoRoot . DIRECTORY_SEPARATOR . '.git') && 0 === $this->process->execute('git log -n1 --pretty=%H', $output, $packageRoot)) {
+                if ($packageDistReference) {
                     $package_data['dist']['reference'] = trim($output);
                 }
+
                 /* @var \Composer\Package\Package $package */
                 try {
                     $package = $this->loader->load($package_data);

@@ -47,7 +47,7 @@ final class Logger extends AbstractLogger
     /**
      * @inheritDoc
      */
-    public function log($level, $message, array $context = [])
+    public function log($level, $message, array $context = []): void
     {
         $this->decorated->log($level, $message, $context);
     }
