@@ -131,6 +131,7 @@ final class MonorepoRepository extends ArrayRepository
                 $package_data['version'] = $this->monorepoVersionGuesser->getPackageVersion($package_data, $packageRoot);
 
                 $output = '';
+                // TODO Calculate this only once.
                 if (is_dir($this->monorepoRoot . DIRECTORY_SEPARATOR . '.git') && 0 === $this->process->execute('git log -n1 --pretty=%H', $output, $packageRoot)) {
                     $package_data['dist']['reference'] = trim($output);
                 }
