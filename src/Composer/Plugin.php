@@ -52,7 +52,22 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
      */
     public function activate(Composer $composer, IOInterface $io): void
     {
-        $this->logger = new Logger($io);
+        // On global installations, if the pronovix/composer-logger library
+        // has not been installed earlier then the install could fail because
+        // the autoloader has not been updated yet with the newly installed
+        // dependency.
+        if (!class_exists('\Pronovix\ComposerLogger\Logger')) {
+            $loggerFile = $composer->getConfig()->get('vendor-dir') . '/pronovix/composer-logger/src/Logger.php';
+            if (file_exists($loggerFile)) {
+                require_once $loggerFile;
+            }
+            else {
+                $io->writeError('composer-logger was missing and it could not be autoloaded.');
+                return;
+            }
+        }
+
+        $logger = new Logger($io);
         $configuration = new PluginConfiguration($composer);
 
         if (!$configuration->isEnabled()) {
