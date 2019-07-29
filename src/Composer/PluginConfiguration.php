@@ -40,12 +40,17 @@ final class PluginConfiguration
     private $maxDiscoveryDepth;
 
     /** @var string[] */
-    private $excludedDirectories = [];
+    private $excludedDirectories;
 
     /**
      * @var bool
      */
     private $enabled;
+
+    /**
+     * @var string|null
+     */
+    private $forcedMonorepoRoot;
 
     /**
      * PluginConfiguration constructor.
@@ -63,6 +68,7 @@ final class PluginConfiguration
         // 0 as max discovery depth is not valid.
         $this->maxDiscoveryDepth = (int) ($monorepo_helper['max-discover-depth'] ?? getenv('PRONOVIX_MONOREPO_HELPER_MAX_DISCOVERY_DEPTH')) ?: self::DEFAULT_PACKAGE_DISCOVERY_DEPTH;
         $this->excludedDirectories = is_array($monorepo_helper['excluded-directories'] ?? null) ? $monorepo_helper['excluded-directories'] : false === getenv('PRONOVIX_MONOREPO_HELPER_EXCLUDED_DIRECTORIES') ? [] : explode(',', getenv('PRONOVIX_MONOREPO_HELPER_EXCLUDED_DIRECTORIES'));
+        $this->forcedMonorepoRoot = ($monorepo_helper['monorepo-root'] ?? null) ?? (false === getenv('PRONOVIX_MONOREPO_HELPER_MONOREPO_ROOT') ? null : getenv('PRONOVIX_MONOREPO_HELPER_MONOREPO_ROOT'));
     }
 
     /**
@@ -106,5 +112,15 @@ final class PluginConfiguration
     public function isEnabled(): bool
     {
         return $this->enabled;
+    }
+
+    /**
+     * Non-validated enforced monorepo root.
+     *
+     * @return string|null
+     */
+    public function getForcedMonorepoRoot(): ?string
+    {
+        return $this->forcedMonorepoRoot;
     }
 }

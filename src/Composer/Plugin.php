@@ -32,6 +32,7 @@ use Composer\Package\Version\VersionParser;
 use Composer\Plugin\CommandEvent;
 use Composer\Plugin\PluginEvents;
 use Composer\Plugin\PluginInterface;
+use Composer\Util\Filesystem as ComposerFilesystem;
 use Composer\Util\ProcessExecutor;
 
 /**
@@ -43,9 +44,6 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
      * @var \Pronovix\MonorepoHelper\Composer\MonorepoRepository|null
      */
     private $repository;
-
-    /** @var \Pronovix\MonorepoHelper\Composer\Logger */
-    private $logger;
 
     /**
      * @inheritDoc
@@ -71,28 +69,41 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
         $configuration = new PluginConfiguration($composer);
 
         if (!$configuration->isEnabled()) {
-            $this->logger->info('Plugin is configured to be disabled.');
+            $logger->info('Plugin is configured to be disabled.');
 
             return;
         }
 
         $process = new ProcessExecutor($io);
-        $monorepoRoot = null;
+        $monorepoRoot = $configuration->getForcedMonorepoRoot();
         $output = '';
-        if (0 === $process->execute('git rev-parse --absolute-git-dir', $output)) {
-            $monorepoRoot = dirname(trim($output));
-            $this->logger->info('Detected monorepo root: {dir}', ['dir' => $monorepoRoot]);
-        }
 
         if (null === $monorepoRoot) {
-            $this->logger->info('Plugin is disabled because no GIT root found in {dir} directory', ['dir' => realpath(getcwd())]);
+            if (0 === $process->execute('git rev-parse --absolute-git-dir', $output)) {
+                $monorepoRoot = dirname(trim($output));
+                $logger->info('Detected monorepo root: {dir}', ['dir' => $monorepoRoot]);
+            }
 
-            return;
+            if (null === $monorepoRoot) {
+                $logger->info('Plugin is disabled because no GIT root found in {dir} directory', ['dir' => realpath(getcwd())]);
+
+                return;
+            }
+        } else {
+            $logger->warning('Forced monorepo root is {directory}.', ['directory' => $monorepoRoot]);
+            $filesystem = new ComposerFilesystem($process);
+            $monorepoRoot = $filesystem->normalizePath($filesystem->isAbsolutePath($monorepoRoot) ? $monorepoRoot : getcwd() . '/' . $monorepoRoot);
+
+            if (!is_dir($monorepoRoot . '/.git')) {
+                $logger->info('Plugin is disabled because forced monorepo root does not seem to be a valid GIT root.');
+
+                return;
+            }
         }
 
         $versionParser = new VersionParser();
-        $monorepoVersionGuesser = new MonorepoVersionGuesser($monorepoRoot, new VersionGuesser($composer->getConfig(), $process, $versionParser), $process, $configuration, $this->logger);
-        $this->repository = new MonorepoRepository($monorepoRoot, $configuration, new ArrayLoader($versionParser, true), $process, $monorepoVersionGuesser, $this->logger);
+        $monorepoVersionGuesser = new MonorepoVersionGuesser($monorepoRoot, new VersionGuesser($composer->getConfig(), $process, $versionParser), $process, $configuration, $logger);
+        $this->repository = new MonorepoRepository($monorepoRoot, $configuration, new ArrayLoader($versionParser, true), $process, $monorepoVersionGuesser, $logger);
         // This ensures that the monorepo repository provides trumps both Packagist and Drupal packagist, so even if
         // the same version is available in multiple repositories the monorepo versions wins. Well, this is not entirely
         // true, it wins for dev versions but for >= alpha versions a different rule applies. See more details in

@@ -36,5 +36,6 @@ configuration gets resolved.
 | offline-mode  | PRONOVIX_MONOOREPO_HELPER_OFFLINE_MODE  | bool  | FALSE  | If it is set to TRUE then the plugin does not try to fetch the latest tags from remote origin. You should ensures that latest tags are being fetched before the plugin actives. |
 | max-discover-depth |  PRONOVIX_MONOREPO_HELPER_MAX_DISCOVERY_DEPTH |  int | 5 | The maximum package discovery depth from the monorepo's root. |
 | excluded-directories |  PRONOVIX_MONOREPO_HELPER_EXCLUDED_DIRECTORIES | array | [] | Set of excluded directories (besides vendor) where the plugin should not look for monorepo packages. The environment variable should contain a comma separated list. |
+| monorepo-root |  PRONOVIX_MONOREPO_HELPER_MONOREPO_ROOT | string | NULL | Could be useful it the plugin installed globally. You can specify the root of the monorepo.
 
 Note: For boolean type configuration options use 1 or 0 in environment variables.
