@@ -5,7 +5,7 @@
     "license": "GPL-2.0-or-later",
     "require": {
         "composer-plugin-api": "^1.1",
-        "pronovix/composer-logger": "*",
+        "pronovix/composer-logger": "^2.0",
         "symfony/finder": "^3.4 || ^4.0",
         "vierbergenlars/php-semver": "^3.0.2"
     },
@@ -14,9 +14,12 @@
         "friendsofphp/php-cs-fixer": "^2.15",
         "vimeo/psalm": "^3.2"
     },
+    "config": {
+        "sort-packages": true
+    },
     "extra": {
         "branch-alias": {
-            "2.x": "2.x-dev"
+            "dev-master": "2.x-dev"
         },
         "class": "Pronovix\\MonorepoHelper\\Composer\\Plugin"
     },
