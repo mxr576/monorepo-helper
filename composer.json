@@ -12,7 +12,7 @@
     "require-dev": {
         "composer/composer": "^1.7.3",
         "friendsofphp/php-cs-fixer": "^2.15",
-        "vimeo/psalm": "^3.2"
+        "vimeo/psalm": "^3.4"
     },
     "config": {
         "sort-packages": true
