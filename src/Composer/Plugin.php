@@ -58,9 +58,9 @@ final class Plugin implements PluginInterface, EventSubscriberInterface
             $loggerFile = $composer->getConfig()->get('vendor-dir') . '/pronovix/composer-logger/src/Logger.php';
             if (file_exists($loggerFile)) {
                 require_once $loggerFile;
-            }
-            else {
+            } else {
                 $io->writeError('composer-logger was missing and it could not be autoloaded.');
+
                 return;
             }
         }
