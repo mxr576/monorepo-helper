@@ -184,33 +184,41 @@ final class MonorepoVersionGuesser
         $output = '';
         if ($this->configuration->isOfflineMode() || 0 === $this->process->execute('git fetch origin', $output, $this->monorepoRoot)) {
             // Proper sorting is possible for local and remote tags like this.
-            // suffix=- will prevent 2.0-rc coming "after" 2.0
+            // "suffix=-" prevents 2.0-rc listed "after" 2.0
             if (0 === $this->process->execute("git -c 'versionsort.suffix=-' for-each-ref --sort='-version:refname' --format='%(refname:short)' refs/tags", $output)) {
                 if (empty(trim($output))) {
                     $this->logger->info('No tag found in the local repository.');
                 } else {
-                    $remote_only_tags = [];
                     $sorted_local_remote_tags = $this->process->splitLines($output);
                     $this->logger->info('The following local and remote tags found: {tags}.', ['tags' => implode(', ', $sorted_local_remote_tags)]);
                     if ($this->configuration->isOfflineMode()) {
                         $remote_only_tags = $sorted_local_remote_tags;
+                        $this->logger->warning('Offline mode is active.');
                     } else {
                         // But (proper) sorting is not possible if we would like to list remote tags _only_.
-                        if (0 === $this->process->execute('git ls-remote -t --refs --exit-code origin', $output, $this->monorepoRoot)) {
-                            if (empty(trim($output))) {
-                                $this->logger->info('No tag found on remote origin.');
-                            } else {
-                                $unsorted_remote_tags_only = array_map(static function (string $line) {
-                                    [, $ref] = preg_split('/\s+/', $line);
-                                    [, , $tag] = explode('/', $ref);
+                        // Also we purposefully do not check the exit code of this process because it does
+                        // not provide additional information.https://git-scm.com/docs/git-ls-remote.html
+                        $this->process->execute('git ls-remote -t --refs --exit-code origin', $output, $this->monorepoRoot);
 
-                                    return $tag;
-                                }, $this->process->splitLines($output));
-                                $remote_only_tags = array_intersect($sorted_local_remote_tags, $unsorted_remote_tags_only);
+                        if (empty(trim($output))) {
+                            $message = 'No tags found on remote origin.';
+                            if (!empty($sorted_local_remote_tags)) {
+                                $message .= ' All tags found earlier were local only.';
                             }
+                            $this->logger->info($message);
+
+                            // We return null here because if someone would like to use the local only tags
+                            //then they should enable the offline tags.
+                            return null;
                         } else {
-                            // This should not happen if `git fetch origin` worked.
-                            $this->logger->critical('Unable to fetch tags on remote origin Error: {error}', ['error' => $this->process->getErrorOutput()]);
+                            $unsorted_remote_tags_only = array_map(static function (string $line) {
+                                [, $ref] = preg_split('/\s+/', $line);
+                                [, , $tag] = explode('/', $ref);
+
+                                return $tag;
+                            }, $this->process->splitLines($output));
+                            $remote_only_tags = array_intersect($sorted_local_remote_tags, $unsorted_remote_tags_only);
+                            $this->logger->info('The following tags found on remote origin: {tags}.', ['tags' => implode(', ', $remote_only_tags)]);
                         }
                     }
 

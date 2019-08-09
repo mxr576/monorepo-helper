@@ -1,8 +1,8 @@
 # Monorepo Helper Composer plugin
 
 This Composer plugin finds all packages in a GIT monorepo and ensures every time when Composer installs _the latest
-version of a package_ and the package is available inside the monorepo then the monorepo version
-of the package gets installed (symlinked from the monorepo) instead other available versions.
+version of a package_ and the package is available inside the monorepo then the monorepo version of the package gets
+installed (symlinked from the monorepo) instead other available versions.
 
 ## Installation
 
@@ -15,8 +15,9 @@ $ composer global require pronovix/monorepo-helper
 The plugin tries to find the latest, valid, semantic versioning GIT tag in monorepo's remote origin. If it does not
 find a valid semantic versioning tag it falls back to the latest dev version.
 
-The identified version from GIT should be always the same as latest version available version on Packagist or in any
-other Composer repository from a library stored in the monorepo.
+The identified version from GIT tags should be always the same as the latest version available version on Packagist or
+in any other Composer repository from a library. For example, if the published version from the foo/bar package is
+"1.0.0-alpha1" on Packagist then it is expected to have a "1.0.0-alpha1" GIT tag in your monorepo's remote origin.
 
 The plugin can only fetch the latest tags from the remote origin if the runtime environment has access to the origin
 repository (via API keys, SSH keys, etc.) If it does not have access to remote origin it is recommended to enable the
